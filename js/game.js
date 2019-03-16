@@ -43,6 +43,7 @@ function preload ()
     // this.load.image('bomb', 'assets/bomb.png');
     this.load.image('bomb', 'assets/bombx2.png');
     this.load.image('bush', 'assets/bush.png');
+    this.load.image('veo', 'assets/veorica1.png');
     // this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('dudex2', 'assets/dudex2.png', { frameWidth: 135, frameHeight: 200 });
     // this.load.spritesheet('explosion', 'assets/explosion.png', { frameWidth: 200, frameHeight: 128 });
@@ -254,11 +255,11 @@ function collectStar (player, star)
 
 function addBomb(player) {
 
-  // var bombCreated = bombs.create(player.x, player.y-76, 'bomb');
-  var bushesCreated = bushes.create(player.x, player.y-76, 'bush');
+  var bombCreated = bombs.create(player.x, player.y-76, 'veo');
+  var bushesCreated = bushes.create(player.x+500, player.y-30, 'bush');
 
   setTimeout(function() {
-      // addExplosion(bombCreated)
+      addExplosion(bombCreated)
     },3000)
 }
 
