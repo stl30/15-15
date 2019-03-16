@@ -19,7 +19,9 @@ var config = {
 
 var player;
 var stars;
+var bombsExplosion;
 var bombs;
+
 var bombsTimer;
 var time = new Date();
 var bombTime = time.getMilliseconds();
@@ -37,8 +39,14 @@ function preload ()
     this.load.image('mountain', 'assets/mountains_3200x640.png');
     // this.load.image('ground', 'assets/platform.png');
     this.load.image('star', 'assets/star.png');
-    this.load.image('bomb', 'assets/bomb.png');
-    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.image('bush', 'assets/bush.png');
+    // this.load.image('bomb', 'assets/bomb.png');
+    this.load.image('bomb', 'assets/bombx2.png');
+    this.load.image('bush', 'assets/bush.png');
+    // this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet('dudex2', 'assets/dudex2.png', { frameWidth: 135, frameHeight: 200 });
+    // this.load.spritesheet('explosion', 'assets/explosion.png', { frameWidth: 200, frameHeight: 128 });
+    this.load.spritesheet('explosion', 'assets/explosionx2big.png', { frameWidth: 200, frameHeight: 256 });
     this.load.image("tiles", "assets/Tiles_32x32.png");
     this.load.tilemapTiledJSON("map", "assets/map.json");
 }
@@ -76,7 +84,8 @@ function create ()
     // platforms.create(750, 220, 'ground');
 
     // The player and its settings
-    player = this.physics.add.sprite(100, 450, 'dude');
+    // player = this.physics.add.sprite(100, 450, 'dude');
+    player = this.physics.add.sprite(100, 450, 'dudex2');
 
     this.physics.add.collider(player, groundLayer);
 
@@ -89,21 +98,28 @@ function create ()
     //  Our player animations, turning, walking left and walking right.
     this.anims.create({
         key: 'left',
-        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+        frames: this.anims.generateFrameNumbers('dudex2', { start: 0, end: 3 }),
         frameRate: 10,
         repeat: -1
     });
 
     this.anims.create({
         key: 'turn',
-        frames: [ { key: 'dude', frame: 4 } ],
+        frames: [ { key: 'dudex2', frame: 4 } ],
         frameRate: 20
     });
 
     this.anims.create({
         key: 'right',
-        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+        frames: this.anims.generateFrameNumbers('dudex2', { start: 5, end: 8 }),
         frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'explosion',
+        frames: this.anims.generateFrameNumbers('explosion', { start: 1, end: 9 }),
+        frameRate: 9,
         repeat: -1
     });
 
@@ -139,6 +155,12 @@ function create ()
     bombs = this.physics.add.group();
     this.physics.add.collider(bombs, groundLayer);
 
+    bombsExplosion = this.physics.add.group();
+    this.physics.add.collider(bombsExplosion, groundLayer);
+
+    bushes = this.physics.add.group();
+    this.physics.add.collider(bushes, groundLayer);
+
     //  The score
     scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
     livesText = this.add.text(16, 48, 'lives: 3', { fontSize: '32px', fill: '#000' });
@@ -150,6 +172,8 @@ function create ()
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(stars, platforms);
     this.physics.add.collider(bombs, platforms);
+    this.physics.add.collider(bombsExplosion, platforms);
+    this.physics.add.collider(bushes, platforms);
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     this.physics.add.overlap(player, stars, collectStar, null, this);
@@ -188,7 +212,7 @@ function update ()
         player.anims.play('turn');
     }
 
-    if (cursors.up.isDown && player.body.touching.down)
+    if (cursors.up.isDown)
     {
         player.setVelocityY(-330);
     }
@@ -229,7 +253,25 @@ function collectStar (player, star)
 }
 
 function addBomb(player) {
-    bombs.create(player.x, player.y, 'bomb');
+
+  // var bombCreated = bombs.create(player.x, player.y-76, 'bomb');
+  var bushesCreated = bushes.create(player.x, player.y-76, 'bush');
+
+  setTimeout(function() {
+      // addExplosion(bombCreated)
+    },3000)
+}
+
+function addExplosion(bombCreated) {
+  bombCreated.destroy();
+  var explosionBomb = bombsExplosion.create(bombCreated.x, bombCreated.y, 'explosion');
+  explosionBomb.setBounce(1);
+  explosionBomb.setCollideWorldBounds(true);
+  explosionBomb.allowGravity = false;
+  explosionBomb.anims.play('explosion', true)
+  setTimeout(function() {
+    explosionBomb.destroy();
+  },1000)
 }
 
 function hitBomb (player, bomb)
