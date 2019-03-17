@@ -345,7 +345,7 @@ function collectStar(player, star) {
 
 function addBomb(player) {
 
-  var bombCreated = bombs.create(player.x, player.y-76, 'veo');
+  var bombCreated = bombs.create(player.x, player.y-76, 'bomb');
   var bushesCreated = bushes.create(player.x+500, player.y-30, 'bush');
 
   setTimeout(function() {
