@@ -42,6 +42,7 @@ var bossCanArrive = false;
 var lives = 10;
 var heroLives = 10;
 var canTakeDamage = true;
+var bossNumberOfHits = 3;
 
 var game = new Phaser.Game(config);
 
@@ -216,6 +217,7 @@ function create() {
 
   bombs = this.physics.add.group();
   this.physics.add.collider(bombs, groundLayer);
+  this.physics.add.overlap(bombs, bombs,null);
 
   bombsExplosion = this.physics.add.group();
   this.physics.add.collider(bombsExplosion, groundLayer);
@@ -228,11 +230,14 @@ function create() {
       {fontSize: '32px', fill: '#000'});
   livesText = this.add.text(16, 48, 'lives: ' + heroLives,
       {fontSize: '32px', fill: '#000'});
-  damageOffText = this.add.text(16, 80, 'damage: ' + canTakeDamage,
-      {fontSize: '22px', fill: '#000'});
+  // damageOffText = this.add.text(16, 80, 'Invulnerabil ' + !canTakeDamage,
+  //     {fontSize: '22px', fill: '#000'});
   scoreText.setScrollFactor(0);
   livesText.setScrollFactor(0);
-  damageOffText.setScrollFactor(0);
+  // damageOffText.setScrollFactor(0);
+
+  bossLife = this.add.text(16, 80, 'DRAKNEAH : '+bossLifeText(bossNumberOfHits),{fontSize: '22px', fill: '#000'});
+  bossLife.setScrollFactor(0);
 
   //  Collide the player and the stars with the platforms
   this.physics.add.collider(player, platforms);
@@ -248,6 +253,8 @@ function create() {
   // this.physics.add.collider(enemies, bombsExplosion, enemyBombHit, null, this);
   this.physics.add.overlap(enemies, bombsExplosion, enemyBombHit, null, this);
 
+
+
   // this.physics.add.collider(player, bombsExplosion, heroBombHit, null, this);
   this.physics.add.overlap(player, bombsExplosion, heroBombHit, null, this);
 
@@ -258,12 +265,18 @@ function create() {
   this.physics.add.overlap(player, enemies, heroEnemyHit, null, this);
 
 
+
+
   const camera = this.cameras.main;
   camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
   this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
   this.cameras.main.startFollow(player, true, 0.05, 0.05);
 
   boss = this.physics.add.sprite(200, 300, 'boss');
+
+  this.physics.add.overlap(player, boss, heroBossHit, null, this);
+  this.physics.add.overlap(boss, bombsExplosion, bossBombHit, null, this);
+
   this.physics.add.collider(boss, groundLayer);
   //  Player physics properties. Give the little guy a slight bounce.
   boss.setBounce(0.2);
@@ -339,7 +352,7 @@ function startBossFight(player,boss) {
 
 function update() {
 
-  if(!bossCanArrive){
+  if(bossCanArrive){
     startBoss(boss)
   }
 
@@ -505,10 +518,10 @@ function updateText(textObject,text,color) {
 
 function setTimedDamageOff() {
   canTakeDamage=false;
-  updateText(damageOffText,'damage: ' + canTakeDamage,'red');
+  // updateText(damageOffText,'Invulnerabil ' + !canTakeDamage,'red');
   setTimeout(function() {
     canTakeDamage=true;
-    updateText(damageOffText,'damage: ' + canTakeDamage,'black');
+    // updateText(damageOffText,'Invulnerabil ' + !canTakeDamage,'black');
   },1500)
 }
 
@@ -523,6 +536,7 @@ function heroBushHit(player, bushes) {
   }
 
 }
+
 function heroEnemyHit(player, enemies) {
   if(canTakeDamage){
     heroLives--;
@@ -532,6 +546,34 @@ function heroEnemyHit(player, enemies) {
     updateText(livesText,'Lives: ' + heroLives,'red');
     setTimedDamageOff();
   }
+
+}
+
+function heroBossHit(player, boss) {
+  if(canTakeDamage){
+    heroLives--;
+    testifGameOver();
+    score -= 5;
+    updateText(scoreText,'Km autostrada: ' + score,'red')
+    updateText(livesText,'Lives: ' + heroLives,'red');
+    setTimedDamageOff();
+  }
+}
+function bossLifeText(bossNumberOfHits){
+  var lifeText = '';
+  for (i=0; i<bossNumberOfHits; i++){
+    lifeText +='=== '
+  }
+  return lifeText;
+}
+function bossBombHit(boss, bombsExplosion) {
+    bossNumberOfHits--;
+    testifGameOver();
+    score += 1000;
+    updateText(scoreText,'Km autostrada: ' + score,'red')
+    updateText(livesText,'Lives: ' + heroLives,'red');
+    updateText(bossLife,'DRAKNEAH :' + bossLifeText(bossNumberOfHits),'red');
+    setTimedDamageOff();
 
 }
 
@@ -549,6 +591,9 @@ function testIfBossCanArrive() {
 function testifGameOver() {
   if (heroLives < 1) {
     gameOver = true;
+  }
+  if(bossNumberOfHits<1){
+    gameOver=true;
   }
 }
 
