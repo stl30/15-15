@@ -23,7 +23,7 @@ var bombs;
 var maxBombs = 3;
 var cantFlyTime = 4000;
 var enemySpeed = 160;
-
+var bossCanChangeDirection=true;
 var bombsTimer = 1000;
 var time = new Date();
 var maxBushes = 5;
@@ -224,7 +224,7 @@ function create() {
   this.physics.add.collider(bushes, groundLayer);
 
   //  The score
-  scoreText = this.add.text(16, 16, 'score: 0',
+  scoreText = this.add.text(16, 16, 'Km autostrada: 0',
       {fontSize: '32px', fill: '#000'});
   livesText = this.add.text(16, 48, 'lives: ' + heroLives,
       {fontSize: '32px', fill: '#000'});
@@ -242,10 +242,20 @@ function create() {
   // this.physics.add.overlap(player, stars, collectStar, null, this);
 
   // this.physics.add.collider(player, bombs, hitBomb, null, this);
-  this.physics.add.collider(bushes, bombsExplosion, bushBombHit, null, this);
-  this.physics.add.collider(enemies, bombsExplosion, enemyBombHit, null, this);
-  this.physics.add.collider(player, bombsExplosion, heroBombHit, null, this);
-  this.physics.add.collider(player, bushes, heroBushHit, null, this);
+  // this.physics.add.collider(bushes, bombsExplosion, bushBombHit, null, this);
+  this.physics.add.overlap(bushes, bombsExplosion, bushBombHit, null, this);
+
+  // this.physics.add.collider(enemies, bombsExplosion, enemyBombHit, null, this);
+  this.physics.add.overlap(enemies, bombsExplosion, enemyBombHit, null, this);
+
+  // this.physics.add.collider(player, bombsExplosion, heroBombHit, null, this);
+  this.physics.add.overlap(player, bombsExplosion, heroBombHit, null, this);
+
+  // this.physics.add.collider(player, bushes, heroBushHit, null, this);
+  this.physics.add.overlap(player, bushes, heroBushHit, null, this);
+
+  // this.physics.add.collider(player, enemies, heroEnemyHit, null, this);
+  this.physics.add.overlap(player, enemies, heroEnemyHit, null, this);
 
 
   const camera = this.cameras.main;
@@ -280,12 +290,51 @@ function create() {
     repeat: -1,
   });
 
+  boss.setCollideWorldBounds(true)
+
 
 }
 
 function startBoss(boss) {
-  boss.anims.play( 'bossright', true);
-  boss.setVelocityX(160);
+  // boss.anims.play( 'bossright', true);
+  // boss.setVelocityX(160);
+  startBossFight(player,boss);
+}
+
+function startBossFight(player,boss) {
+
+  var randomy = Math.random() * 3200;
+  // console.dir(player.body.velocity)
+  // console.log('boss'+boss.x)
+
+  if (boss.x < 90) {
+    boss.anims.play('bossright', true);
+    boss.setVelocityX(160);
+  } else if (boss.x > 3110) {
+    boss.anims.play('bossleft', true);
+    boss.setVelocityX(-160);
+  }
+
+  if(bossCanChangeDirection){
+    if(player.x<boss.x+350 ){
+
+      boss.anims.play( 'bossleft', true);
+      boss.setVelocityX(-160);
+
+    }
+    if(player.x>=boss.x-400 ){
+
+      boss.anims.play( 'bossright', true);
+      boss.setVelocityX(160);
+
+
+    }
+    bossCanChangeDirection=false;
+    setTimeout(function() {
+      bossCanChangeDirection=true;
+    },4000)
+  }
+
 }
 
 function update() {
@@ -425,8 +474,7 @@ function bushBombHit(bush, bombExplosion) {
   bush.destroy();
   bushesDestroyed++;
   score += 100;
-  scoreText.setText('Score: ' + score);
-  scoreText.setColor('red');
+  updateText(scoreText,'Km autostrada: ' + score,'red');
   laidBushes--;
   // player.setTint(0xff0000);
 }
@@ -434,8 +482,7 @@ function enemyBombHit(enemy, bombExplosion) {
   enemy.destroy();
   enemyNumber--;
   score += 500;
-  scoreText.setText('Score: ' + score);
-  scoreText.setColor('red');
+  updateText(scoreText,'Km autostrada: ' + score,'red')
   // player.setTint(0xff0000);
 }
 function heroBombHit(player, bombExplosion) {
@@ -443,8 +490,8 @@ function heroBombHit(player, bombExplosion) {
     heroLives--;
     testifGameOver();
     score -= 50;
-    livesText.setText('Lives: ' + heroLives);
-    livesText.setColor('red');
+    updateText(scoreText,'Km autostrada: ' + score,'red')
+    updateText(livesText,'Lives: ' + heroLives,'red')
     setTimedDamageOff();
   }
 
@@ -470,8 +517,19 @@ function heroBushHit(player, bushes) {
     heroLives--;
     testifGameOver();
     score -= 25;
-    livesText.setText('Lives: ' + heroLives);
-    livesText.setColor('red');
+    updateText(scoreText,'Km autostrada: ' + score,'red')
+    updateText(livesText,'Lives: ' + heroLives,'red');
+    setTimedDamageOff();
+  }
+
+}
+function heroEnemyHit(player, enemies) {
+  if(canTakeDamage){
+    heroLives--;
+    testifGameOver();
+    score -= 50;
+    updateText(scoreText,'Km autostrada: ' + score,'red')
+    updateText(livesText,'Lives: ' + heroLives,'red');
     setTimedDamageOff();
   }
 
