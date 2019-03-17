@@ -196,7 +196,7 @@ function create() {
 
   this.keys = this.input.keyboard.addKeys({
 
-    'bomb': Phaser.Input.Keyboard.KeyCodes.B,
+    'bomb': Phaser.Input.Keyboard.KeyCodes.space,
 
     'fight': Phaser.Input.Keyboard.KeyCodes.F,
 
