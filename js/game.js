@@ -553,6 +553,5 @@ function testifGameOver() {
 }
 
 function gameOverScreen(player) {
-  alert('Game Over');
-  location.reload();
+  location.href='lose.html';
 }
