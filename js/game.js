@@ -6,7 +6,7 @@ var config = {
     default: 'arcade',
     arcade: {
       gravity: {y: 300},
-      debug: true,
+      debug: false,
     },
   },
   scene: {
@@ -40,6 +40,8 @@ var scoreText;
 var enemyNumber = 3;
 var bossCanArrive = false;
 var lives = 10;
+var heroLives = 10;
+var canTakeDamage = true;
 
 var game = new Phaser.Game(config);
 
@@ -58,7 +60,10 @@ function preload() {
       {frameWidth: 120, frameHeight: 96});
   this.load.spritesheet('enemy2', 'assets/devil-sprite-veorica.png',
       {frameWidth: 120, frameHeight: 96});
-  // this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+
+  this.load.spritesheet('boss', 'assets/boss-sprite.png',
+      {frameWidth: 176, frameHeight: 213});
+  this.load.spritesheet('hero', 'assets/hero-sprite.png', { frameWidth: 175, frameHeight: 238 });
   this.load.spritesheet('dudex2', 'assets/dudex2.png',
       {frameWidth: 135, frameHeight: 200});
   // this.load.spritesheet('explosion', 'assets/explosion.png', { frameWidth: 200, frameHeight: 128 });
@@ -100,7 +105,7 @@ function create() {
   // platforms.create(750, 220, 'ground');
 
   // The player and its settings
-  player = this.physics.add.sprite(200, 450, 'dudex2');
+  player = this.physics.add.sprite(100, 450, 'hero').setScale(0.75);
   this.physics.add.collider(player, groundLayer);
 
   //  Player physics properties. Give the little guy a slight bounce.
@@ -110,20 +115,20 @@ function create() {
   //  Our player animations, turning, walking left and walking right.
   this.anims.create({
     key: 'left',
-    frames: this.anims.generateFrameNumbers('dudex2', {start: 0, end: 3}),
+    frames: this.anims.generateFrameNumbers('hero', {start: 4, end: 7}),
     frameRate: 10,
     repeat: -1,
   });
 
   this.anims.create({
     key: 'turn',
-    frames: [{key: 'dudex2', frame: 4}],
+    frames: [{key: 'hero', frame: 3}],
     frameRate: 20,
   });
 
   this.anims.create({
     key: 'right',
-    frames: this.anims.generateFrameNumbers('dudex2', {start: 5, end: 8}),
+    frames: this.anims.generateFrameNumbers('hero', {start: 0, end: 3}),
     frameRate: 10,
     repeat: -1,
   });
@@ -221,10 +226,13 @@ function create() {
   //  The score
   scoreText = this.add.text(16, 16, 'score: 0',
       {fontSize: '32px', fill: '#000'});
-  livesText = this.add.text(16, 48, 'lives: ' + lives,
+  livesText = this.add.text(16, 48, 'lives: ' + heroLives,
       {fontSize: '32px', fill: '#000'});
+  damageOffText = this.add.text(16, 80, 'damage: ' + canTakeDamage,
+      {fontSize: '22px', fill: '#000'});
   scoreText.setScrollFactor(0);
   livesText.setScrollFactor(0);
+  damageOffText.setScrollFactor(0);
 
   //  Collide the player and the stars with the platforms
   this.physics.add.collider(player, platforms);
@@ -236,14 +244,56 @@ function create() {
   // this.physics.add.collider(player, bombs, hitBomb, null, this);
   this.physics.add.collider(bushes, bombsExplosion, bushBombHit, null, this);
   this.physics.add.collider(enemies, bombsExplosion, enemyBombHit, null, this);
+  this.physics.add.collider(player, bombsExplosion, heroBombHit, null, this);
+  this.physics.add.collider(player, bushes, heroBushHit, null, this);
+
 
   const camera = this.cameras.main;
   camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
   this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
   this.cameras.main.startFollow(player, true, 0.05, 0.05);
+
+  boss = this.physics.add.sprite(200, 300, 'boss');
+  this.physics.add.collider(boss, groundLayer);
+  //  Player physics properties. Give the little guy a slight bounce.
+  boss.setBounce(0.2);
+  boss.setCollideWorldBounds(false);
+
+  //  Our player animations, turning, walking left and walking right.
+  this.anims.create({
+    key: 'bossleft',
+    frames: this.anims.generateFrameNumbers('boss', {start: 0, end: 1}),
+    frameRate: 10,
+    repeat: -1,
+  });
+
+  this.anims.create({
+    key: 'turn',
+    frames: [{key: 'boss', frame: 3}],
+    frameRate: 20,
+  });
+
+  this.anims.create({
+    key: 'bossright',
+    frames: this.anims.generateFrameNumbers('boss', {start: 2, end: 3}),
+    frameRate: 10,
+    repeat: -1,
+  });
+
+
+}
+
+function startBoss(boss) {
+  boss.anims.play( 'bossright', true);
+  boss.setVelocityX(160);
 }
 
 function update() {
+
+  if(!bossCanArrive){
+    startBoss(boss)
+  }
+
   testifGameOver();
   if (gameOver) {
     gameOverScreen(player);
@@ -361,7 +411,7 @@ function addExplosion(bombCreated) {
 
 }
 
-function hitBomb(player, bomb) {
+function hitBomaaaab(player, bomb) {
   this.physics.pause();
 
   player.setTint(0xff0000);
@@ -388,6 +438,44 @@ function enemyBombHit(enemy, bombExplosion) {
   scoreText.setColor('red');
   // player.setTint(0xff0000);
 }
+function heroBombHit(player, bombExplosion) {
+  if(canTakeDamage){
+    heroLives--;
+    testifGameOver();
+    score -= 50;
+    livesText.setText('Lives: ' + heroLives);
+    livesText.setColor('red');
+    setTimedDamageOff();
+  }
+
+  // player.setTint(0xff0000);
+}
+
+function updateText(textObject,text,color) {
+  textObject.setText(text);
+  textObject.setColor(color);
+}
+
+function setTimedDamageOff() {
+  canTakeDamage=false;
+  updateText(damageOffText,'damage: ' + canTakeDamage,'red');
+  setTimeout(function() {
+    canTakeDamage=true;
+    updateText(damageOffText,'damage: ' + canTakeDamage,'black');
+  },1500)
+}
+
+function heroBushHit(player, bushes) {
+  if(canTakeDamage){
+    heroLives--;
+    testifGameOver();
+    score -= 25;
+    livesText.setText('Lives: ' + heroLives);
+    livesText.setColor('red');
+    setTimedDamageOff();
+  }
+
+}
 
 function testIfBossCanArrive() {
 
@@ -401,7 +489,7 @@ function testIfBossCanArrive() {
 }
 
 function testifGameOver() {
-  if (lives < 1) {
+  if (heroLives < 1) {
     gameOver = true;
   }
 }
