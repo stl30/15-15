@@ -21,6 +21,8 @@ var stars;
 var bombsExplosion;
 var bombs;
 var maxBombs = 3;
+var cantFlyTime = 4000;
+var enemySpeed = 160;
 
 var bombsTimer = 1000;
 var time = new Date();
@@ -176,11 +178,11 @@ function create() {
     var rdnNumber = Math.random() * 100;
     if (rdnNumber < 50) {
       enemies[i].anims.play(name + 'left', true);
-      enemies[i].setVelocityX(-160);
+      enemies[i].setVelocityX(-1 * enemySpeed);
 
     } else {
       enemies[i].anims.play(name + 'right', true);
-      enemies[i].setVelocityX(160);
+      enemies[i].setVelocityX(enemySpeed);
     }
 
     // var ufo = this.add.sprite(200, 240, 'ufo');
@@ -272,7 +274,7 @@ function update() {
     canFly = false;
     setTimeout(function() {
       canFly = true;
-    }, 4000);
+    }, cantFlyTime);
   }
 
   if (Phaser.Input.Keyboard.JustDown(cursors.up) && canFly) {
@@ -286,7 +288,7 @@ function update() {
       canFly = false;
       setTimeout(function() {
         canFly = true;
-      }, 4000);
+      }, cantFlyTime);
     }
 
   }
@@ -304,10 +306,10 @@ function update() {
 
     if (enemies[i].x < 90) {
       enemies[i].anims.play(enemyName + 'right', true);
-      enemies[i].setVelocityX(160);
+      enemies[i].setVelocityX(enemySpeed);
     } else if (enemies[i].x > 3110) {
       enemies[i].anims.play(enemyName + 'left', true);
-      enemies[i].setVelocityX(-160);
+      enemies[i].setVelocityX(-1*enemySpeed);
     }
   }
 
