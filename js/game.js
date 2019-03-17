@@ -29,22 +29,22 @@ var time = new Date();
 var maxBushes = 5;
 var laidBushes = 0;
 var bushMaxSeedingTime = 10000;
-var bushesDestroyed = 5;
+var bushesDestroyed = 0;
 var bushesToDestroyForBoss = 10;
 var canFly = true;
 var platforms;
 var cursors;
 var score = 0;
 var gameOver = false;
-var gameStatus = 'loose';
+var gameStatus = 'lose';
 var scoreText;
-var enemyNumber = 1;
+var enemyNumber = 3;
 var bossCanArrive = false;
-var lives = 10;
-var heroLives = 10;
+var lives = 100;
+var heroLives = 100;
 var canTakeDamage = true;
 var bossCanTakeDamage = false;
-var bossNumberOfHits = 10;
+var bossNumberOfHits = 15;
 
 var game = new Phaser.Game(config);
 
