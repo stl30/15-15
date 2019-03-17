@@ -588,5 +588,5 @@ function testifGameOver() {
 }
 
 function gameOverScreen(player) {
-    // location.href = 'lose.html';
+    location.href = 'lose.html';
 }
