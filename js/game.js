@@ -1,7 +1,7 @@
 
 var config = {
     type: Phaser.AUTO,
-    width: 800,
+    width: 1000,
     height: 640,
     physics: {
         default: 'arcade',
@@ -21,16 +21,23 @@ var player;
 var stars;
 var bombsExplosion;
 var bombs;
+var maxBombs = 3;
 
-var bombsTimer;
+var bombsTimer=1000;
 var time = new Date();
-var bombTime = time.getMilliseconds();
+var maxBushes = 10;
+var bushMaxSeedingTime=10000;
+var bushesDestroyed=0;
+var bushesToDestroyForBoss=10;
+var canFly=true;
 var platforms;
 var cursors;
 var score = 0;
 var gameOver = false;
 var scoreText;
 var enemyNumber = 3;
+var bossCanArrive = false;
+var lives = 10;
 
 var game = new Phaser.Game(config);
 
@@ -43,14 +50,16 @@ function preload() {
     // this.load.image('bomb', 'assets/bomb.png');
     this.load.image('bomb', 'assets/bombx2.png');
     this.load.image('bush', 'assets/bush.png');
-    this.load.image('veo', 'assets/veorica1.png');
+    this.load.spritesheet('enemy0', 'assets/devil-sprite-calin.png', { frameWidth: 120, frameHeight: 96 });
+    this.load.spritesheet('enemy1', 'assets/devil-sprite-tudorel.png', { frameWidth: 120, frameHeight: 96 });
+    this.load.spritesheet('enemy2', 'assets/devil-sprite-veorica.png', { frameWidth: 120, frameHeight: 96 });
     // this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('dudex2', 'assets/dudex2.png', { frameWidth: 135, frameHeight: 200 });
     // this.load.spritesheet('explosion', 'assets/explosion.png', { frameWidth: 200, frameHeight: 128 });
     this.load.spritesheet('explosion', 'assets/explosionx2big.png', { frameWidth: 200, frameHeight: 256 });
 
 
-    this.load.spritesheet('enemy', 'assets/enemy.png', {frameWidth: 32, frameHeight: 48});
+    // this.load.spritesheet('enemy', 'assets/enemy.png', {frameWidth: 32, frameHeight: 48});
     this.load.image("tiles", "assets/Tiles_32x32.png");
     this.load.tilemapTiledJSON("map", "assets/map.json");
 }
@@ -121,90 +130,62 @@ function create() {
         repeat: -1
     });
 
-    enemies = this.physics.add.group();
+    // enemies = this.physics.add.group();
+    enemies = [];
 
     for (var i = 0; i < enemyNumber; i++) {
         var randomy = Math.random() * 3200;
 
-        var name = 'enemy' + i;
-        enemy = this.physics.add.sprite(randomy, player.y + 16, 'dudex2');
-        this.physics.add.collider(enemy, groundLayer);
+        var name = 'enemy'+i;
+        // console.log(name)
+        enemies[i] = this.physics.add.sprite(randomy, player.y + 16, name);
+        this.physics.add.collider(enemies[i], groundLayer);
 
         //  Player physics properties. Give the little guy a slight bounce.
-        enemy.setBounce(0.2);
-        enemy.setCollideWorldBounds(true);
+        enemies[i].setBounce(0.2);
+        enemies[i].setCollideWorldBounds(true);
+
+        enemies[i].canLayBushes = true;
+
+        startLayingBush(enemies[i]);
 
         //  Our player animations, turning, walking left and walking right.
         this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers(name, {start: 0, end: 3}),
+            key: name+'left',
+            frames: this.anims.generateFrameNumbers(name, {start: 0, end: 1}),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
-            key: 'turn',
-            frames: [{key: name, frame: 4}],
+            key: name+'turn',
+            frames: [{key: name, frame: 3}],
             frameRate: 20
         });
 
         this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers(name, {start: 5, end: 8}),
+            key: name+'right',
+            frames: this.anims.generateFrameNumbers(name, {start: 2, end: 3}),
             frameRate: 10,
             repeat: -1
         });
 
         var rdnNumber = Math.random() * 100;
         if (rdnNumber < 50) {
-            enemy.anims.play('left', true);
-            enemy.setVelocityX(-160);
+            enemies[i].anims.play(name+'left', true);
+            enemies[i].setVelocityX(-160);
 
         } else {
-            enemy.anims.play('right', true);
-            enemy.setVelocityX(160);
+            enemies[i].anims.play(name+'right', true);
+            enemies[i].setVelocityX(160);
         }
+
+
 
         // var ufo = this.add.sprite(200, 240, 'ufo');
 
     }
 
-    // var randomy = Math.random() * 3200;
-    //
-    // enemy = this.physics.add.sprite(randomy + player.x, player.y + 16, 'enemy');
-    // this.physics.add.collider(enemy, groundLayer);
-
-    // //  Player physics properties. Give the little guy a slight bounce.
-    // enemy.setBounce(0.2);
-    // enemy.setCollideWorldBounds(true);
-    //
-    // //  Our player animations, turning, walking left and walking right.
-    // this.anims.create({
-    //     key: 'left',
-    //     frames: this.anims.generateFrameNumbers('enemy', {start: 0, end: 3}),
-    //     frameRate: 10,
-    //     repeat: -1
-    // });
-    //
-    // this.anims.create({
-    //     key: 'turn',
-    //     frames: [{key: 'enemy', frame: 4}],
-    //     frameRate: 20
-    // });
-    //
-    // this.anims.create({
-    //     key: 'right',
-    //     frames: this.anims.generateFrameNumbers('enemy', {start: 5, end: 8}),
-    //     frameRate: 10,
-    //     repeat: -1
-    // });
-    //
-    // enemy.anims.play('left', true);
-    // enemy.setVelocityX(-160);
-
-    // player 1 will use WASD
-
-    // the returned object will have the same properties as the cursor keys, so it's easier to work with them
 
     this.keys = this.input.keyboard.addKeys({
 
@@ -242,7 +223,7 @@ function create() {
 
     //  The score
     scoreText = this.add.text(16, 16, 'score: 0', {fontSize: '32px', fill: '#000'});
-    livesText = this.add.text(16, 48, 'lives: 3', {fontSize: '32px', fill: '#000'});
+    livesText = this.add.text(16, 48, 'lives: '+lives, {fontSize: '32px', fill: '#000'});
     scoreText.setScrollFactor(0);
     livesText.setScrollFactor(0);
 
@@ -253,9 +234,11 @@ function create() {
     this.physics.add.collider(bombs, platforms);
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    this.physics.add.overlap(player, stars, collectStar, null, this);
+    // this.physics.add.overlap(player, stars, collectStar, null, this);
 
     // this.physics.add.collider(player, bombs, hitBomb, null, this);
+    this.physics.add.collider(bushes, bombsExplosion, bushBombHit, null, this);
+
 
     const camera = this.cameras.main;
     camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -265,7 +248,7 @@ function create() {
 
 function update() {
     if (gameOver) {
-        return;
+        gameOverScreen(player);
     }
 
     if (cursors.left.isDown) {
@@ -277,7 +260,6 @@ function update() {
         player.setVelocityX(160);
 
         player.anims.play('right', true);
-        // addEnemy();
     }
     else {
         player.setVelocityX(0);
@@ -285,68 +267,89 @@ function update() {
         player.anims.play('turn');
     }
 
-    if (cursors.up.isDown && player.body.touching.down) {
-        player.setVelocityY(-330);
-        enemy.anims.play('left', true);
+
+    if(player.body.onFloor()){
+        time = new Date();
+        flyTime = time.getTime();
     }
+
+    // daca ajunge prea sus nu mai poate zbura 4 secunde
+    if(player.y < 120 ){
+        canFly=false;
+        setTimeout(function() {
+            canFly=true;
+        },4000)
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(cursors.up) && canFly) {
+        time = new Date();
+        // console.log(time.getTime())
+        // console.log(flyTime)
+
+        player.setVelocityY(-170);
+
+        if(time.getTime()>flyTime+5000) {
+            canFly = false;
+            setTimeout(function() {
+                canFly = true;
+            }, 4000)
+        }
+
+    }
+
+
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.bomb)) {
-        addBomb(player);
+        // console.log(bombs.children.entries.length)
+        if(bombs.children.entries.length<maxBombs){
+
+            addBomb(player);
+        }
     }
 
 
-    // for (var i = 0; i < enemyNumber; i++) {
-    //     if (enemy[i].x < 90) {
-    //         enemies.anims.play('right', true);
-    //         enemies.setVelocityX(160);
-    //     } else if (enemies[i].x > 3110) {
-    //         enemies.anims.play('left', true);
-    //         enemies.setVelocityX(-160);
-    //     }
-    // }
+    for (var i = 0; i < enemies.length; i++) {
+        enemyName = 'enemy'+i;
 
-    // for (var i = 0; i < enemies.length; i++) {
-    //     if (enemies[i].x < 90) {
-    //         enemies.anims.play('right', true);
-    //         enemies.setVelocityX(160);
-    //     } else if (enemies[i].x > 3110) {
-    //         enemies.anims.play('left', true);
-    //         enemies.setVelocityX(-160);
-    //     }
-    // }
+        if (enemies[i].x < 90) {
+            enemies[i].anims.play(enemyName+'right', true);
+            enemies[i].setVelocityX(160);
+        } else if (enemies[i].x > 3110) {
+            enemies[i].anims.play(enemyName+'left', true);
+            enemies[i].setVelocityX(-160);
+        }
+    }
 }
 
-function collectStar(player, star) {
-    star.disableBody(true, true);
+// function collectStar(player, star) {
+//
+//      Add and update the score
+    // score += 10;
+    // scoreText.setText('Score: ' + score);
+    // scoreText.setColor('red');
+//
+//
+// }
 
-    //  Add and update the score
-    score += 10;
-    scoreText.setText('Score: ' + score);
-    scoreText.setColor('red');
+function startLayingBush(enemy) {
+    var seedIn = Math.random() * bushMaxSeedingTime;
+    setTimeout(function() {
+        addBush(enemy);
+    },seedIn)
+}
 
-    if (stars.countActive(true) === 0) {
-        //  A new batch of stars to collect
-        stars.children.iterate(function (child) {
-
-            child.enableBody(true, child.x, 0, true, true);
-
-        });
-
-        var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-
-        var bomb = bombs.create(x, 16, 'bomb');
-        bomb.setBounce(1);
-        bomb.setCollideWorldBounds(true);
-        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-        bomb.allowGravity = false;
-
+function addBush(enemy) {
+    // console.log(bushes.children.entries.length)
+    if(bushes.children.entries.length<maxBushes){
+        var bushesCreated = bushes.create(enemy.x-20, enemy.y-30, 'bush');
+        console.log(bushes.children.entries.length)
     }
+    startLayingBush(enemy);
 }
 
 function addBomb(player) {
 
   var bombCreated = bombs.create(player.x, player.y-76, 'bomb');
-  var bushesCreated = bushes.create(player.x+500, player.y-30, 'bush');
 
   setTimeout(function() {
       addExplosion(bombCreated)
@@ -362,7 +365,8 @@ function addExplosion(bombCreated) {
   explosionBomb.anims.play('explosion', true)
   setTimeout(function() {
     explosionBomb.destroy();
-  },1000)
+  },bombsTimer)
+
 }
 
 function hitBomb(player, bomb) {
@@ -373,4 +377,37 @@ function hitBomb(player, bomb) {
     player.anims.play('turn');
 
     gameOver = true;
+}
+
+function bushBombHit(bush, bombExplosion) {
+    bush.destroy();
+    bushesDestroyed++;
+    score += 100;
+    scoreText.setText('Score: ' + score);
+    scoreText.setColor('red');
+    // player.setTint(0xff0000);
+    testIfBossCanArrive()
+    testifGameOver();
+}
+
+function testIfBossCanArrive() {
+
+    if(bushesDestroyed>=bushesToDestroyForBoss){
+        bossCanArrive = true
+    }
+    if((enemies.length===0 && bushes.children.entries.length)){
+        bossCanArrive = true
+    }
+
+}
+
+function testifGameOver() {
+    if(lives<1){
+        gameOver = true
+    }
+}
+
+function gameOverScreen(player) {
+    alert('Game Over');
+    location.reload();
 }
