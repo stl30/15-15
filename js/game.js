@@ -29,20 +29,22 @@ var time = new Date();
 var maxBushes = 5;
 var laidBushes = 0;
 var bushMaxSeedingTime = 10000;
-var bushesDestroyed = 0;
+var bushesDestroyed = 5;
 var bushesToDestroyForBoss = 10;
 var canFly = true;
 var platforms;
 var cursors;
 var score = 0;
 var gameOver = false;
+var gameStatus = 'loose';
 var scoreText;
-var enemyNumber = 3;
+var enemyNumber = 1;
 var bossCanArrive = false;
 var lives = 10;
 var heroLives = 10;
 var canTakeDamage = true;
-var bossNumberOfHits = 3;
+var bossCanTakeDamage = false;
+var bossNumberOfHits = 10;
 
 var game = new Phaser.Game(config);
 
@@ -259,7 +261,7 @@ function create() {
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.startFollow(player, true, 0.05, 0.05);
 
-    boss = this.physics.add.sprite(200, 300, 'boss');
+    boss = this.physics.add.sprite(3000, 300, 'boss');
 
     this.physics.add.overlap(player, boss, heroBossHit, null, this);
     this.physics.add.overlap(boss, bombsExplosion, bossBombHit, null, this);
@@ -338,19 +340,20 @@ function startBossFight(player, boss) {
 }
 
 function update() {
+  testifGameOver();
 
-    if (bossCanArrive) {
-        startBoss(boss)
-    }
+  if (gameOver) {
+    gameOverScreen(player);
+  }
 
-    testifGameOver();
-    if (gameOver) {
-        gameOverScreen(player);
-    }
     testIfBossCanArrive();
 
-    if (cursors.left.isDown) {
-        player.setVelocityX(-160);
+    if(bossCanArrive){
+    startBoss(boss);
+  }
+
+  if (cursors.left.isDown) {
+    player.setVelocityX(-160);
 
         player.anims.play('left', true);
     } else if (cursors.right.isDown) {
@@ -513,6 +516,15 @@ function setTimedDamageOff() {
     }, 1500)
 }
 
+function setBossTimedDamageOff() {
+  bossCanTakeDamage=false;
+  // updateText(damageOffText,'Invulnerabil ' + !canTakeDamage,'red');
+  setTimeout(function() {
+    bossCanTakeDamage=true;
+    // updateText(damageOffText,'Invulnerabil ' + !canTakeDamage,'black');
+  },1500)
+}
+
 function heroBushHit(player, bushes) {
     if (canTakeDamage) {
         heroLives--;
@@ -542,7 +554,7 @@ function heroBossHit(player, boss) {
         heroLives--;
         testifGameOver();
         score -= 5;
-        updateText(scoreText, 'Km autostrada: ' + score, 'red')
+        updateText(scoreText, 'Km autostrada1: ' + score, 'red');
         updateText(livesText, 'Lives: ' + heroLives, 'red');
         setTimedDamageOff();
     }
@@ -557,36 +569,53 @@ function bossLifeText(bossNumberOfHits) {
 }
 
 function bossBombHit(boss, bombsExplosion) {
-    bossNumberOfHits--;
-    testifGameOver();
-    score += 1000;
-    updateText(scoreText, 'Km autostrada: ' + score, 'red')
-    updateText(livesText, 'Lives: ' + heroLives, 'red');
-    updateText(bossLife, 'DRAKNEAH :' + bossLifeText(bossNumberOfHits), 'red');
-    setTimedDamageOff();
+    if(bossCanTakeDamage){
+      console.log('hit');
+      bossNumberOfHits--;
+      testifGameOver();
+      score += 1000;
+      updateText(scoreText, 'Km autostrada: ' + score, 'red')
+      updateText(livesText, 'Lives: ' + heroLives, 'red');
+      updateText(bossLife, 'DRAKNEAH :' + bossLifeText(bossNumberOfHits), 'red');
+      setBossTimedDamageOff();
+    }
 
 }
 
 function testIfBossCanArrive() {
 
-    if (bushesDestroyed >= bushesToDestroyForBoss) {
-        bossCanArrive = true;
-    }
-    if ((enemies.length === 0 && bushes.children.entries.length)) {
-        bossCanArrive = true;
-    }
+  if (bushesDestroyed >= bushesToDestroyForBoss) {
+    bossCanArrive = true;
+    bossCanTakeDamage=true;
+    // updateText(bossLife,bossLifeText(bossNumberOfHits),'red')
+  }
+
+  console.log(enemies.length)
+    if ((enemies.length < 2 && bushes.children.entries.length)) {
+    bossCanArrive = true;
+    bossCanTakeDamage=true;
+    // updateText(bossLife,bossLifeText(bossNumberOfHits),'red')
+  }
 
 }
 
 function testifGameOver() {
-    if (heroLives < 1) {
-        gameOver = true;
-    }
-    if (bossNumberOfHits < 1) {
-        gameOver = true;
-    }
+  if (heroLives < 1) {
+    gameOver = true;
+    gameStatus='lose';
+  }
+  if(bossNumberOfHits<1){
+    gameOver=true;
+    gameStatus='win';
+  }
 }
 
-function gameOverScreen(player) {
+function gameOverScreen(player,option) {
+  if(gameStatus=='lose'){
     location.href = 'lose.html';
+  }
+  if(gameStatus=='win'){
+    location.href='win.html';
+  }
+
 }
